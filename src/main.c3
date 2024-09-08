@@ -53,11 +53,10 @@ fn Async coro_3(CoroutineCtx this) {
   }
 }
 
-fn int main(String[] args)
-{
+fn int main(String[] args) {
   EvLoop evloop = evloop::loop::new();
   evloop.add_coroutine(&coro_3, null);
   evloop.add_coroutine(&coro_2, null);
   evloop.loop_progress();
-	return 0;
+  return 0;
 }

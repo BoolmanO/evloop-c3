@@ -2,8 +2,7 @@ module evloop::coroutine;
 import evloop::loop;
 import evloop::async;
 
-enum CoroutineStatus : int
-{
+enum CoroutineStatus : int {
   PENDING,
   RUNNING,
   TERMINATED,
