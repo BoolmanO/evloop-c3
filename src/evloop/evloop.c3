@@ -25,19 +25,14 @@ fn void* EvLoop.run(&self, Coroutine coroutine, void* args) {
 }
 
 fn void EvLoop.progress(&self) {
-  Async! func = self.get_next();
-  if (try func) {
-    if (func.is_active()) {
-      func = func.ctx.coroutine(func.ctx);
-      if (func.status == CoroutineStatus.RUNNING) {
-        if (self.coroutines.size > 0) {
-          self.coroutines.push_front(func);
-        }
-        else {
-          self.coroutines.push(func);
-        }
-      }
+  if (try func = self.get_next() && func.is_active()) {
+    func = func.ctx.coroutine(func.ctx);
+    if (func.status != CoroutineStatus.RUNNING) return;
+    if (!self.coroutines.size) {
+      self.coroutines.push(func);
+      return;
     }
+    self.coroutines.push_front(func);
   }
 }
 
