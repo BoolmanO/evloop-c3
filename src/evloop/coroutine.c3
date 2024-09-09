@@ -18,17 +18,17 @@ struct CoroutineCtx {
   EvLoop* evloop;
 }
 
-fn Async CoroutineCtx.next(CoroutineCtx this, void* data = null) {
-  this.step = this.step + 1;
-  this.out = data;
-  return Async {CoroutineStatus.RUNNING, this};
+fn Async CoroutineCtx.next(self, void* data = null) {
+  self.step = self.step + 1;
+  self.out = data;
+  return {CoroutineStatus.RUNNING, self};
 }
 
-fn Async CoroutineCtx.final(CoroutineCtx this, void* data = null) {
-  this.out = data;
-  return Async {CoroutineStatus.FINISHED, this};
+fn Async CoroutineCtx.final(self, void* data = null) {
+  self.out = data;
+  return {CoroutineStatus.FINISHED, self};
 }
 
-fn void* CoroutineCtx.await(CoroutineCtx this, Coroutine coro, void* args) {
-  return this.evloop.run(coro, args);
+fn void* CoroutineCtx.await(&self, Coroutine coro, void* args) {
+  return self.evloop.run(coro, args);
 }

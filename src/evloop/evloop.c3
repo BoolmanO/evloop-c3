@@ -3,55 +3,56 @@ import std::collections::list;
 import evloop::async;
 import evloop::coroutine;
 
+def AsyncList = List(<Async>);
 struct EvLoop {
-  List(<Async>) coroutines;
+   AsyncList coroutines;
 }
 
 fn EvLoop new() {
-  List(<Async>) list;
+  AsyncList list;
   list.new_init();
-  EvLoop evloop = EvLoop {list};
+  EvLoop evloop = {list};
   return evloop;
 }
 
-fn void* EvLoop.run(EvLoop* evloop, Coroutine coroutine, void* args) {
-  CoroutineCtx ctx = {coroutine, 0, args, evloop};
+fn void* EvLoop.run(&self, Coroutine coroutine, void* args) {
+  CoroutineCtx ctx = {coroutine, 0, args, self};
   Async result = coroutine(ctx);
-  while (result.status != CoroutineStatus.FINISHED && result.status != CoroutineStatus.TERMINATED) {
+  while (result.is_active()) {
     result = coroutine(result.ctx);
   }
   return result.ctx.out;
 }
 
-fn void EvLoop.progress(EvLoop* evloop) {
-  Async! func = evloop.get_next();
+fn void EvLoop.progress(&self) {
+  Async! func = self.get_next();
   if (try func) {
-    if (func.status != CoroutineStatus.FINISHED && func.status != CoroutineStatus.TERMINATED) {
+    if (func.is_active()) {
       func = func.ctx.coroutine(func.ctx);
       if (func.status == CoroutineStatus.RUNNING) {
-        if (evloop.coroutines.size > 0) {
-          evloop.coroutines.push_front(func);
+        if (self.coroutines.size > 0) {
+          self.coroutines.push_front(func);
         }
         else {
-          evloop.coroutines.push(func);
+          self.coroutines.push(func);
         }
       }
     }
   }
 }
 
-fn void EvLoop.loop_progress(EvLoop* evloop) {
-  while (evloop.coroutines.size > 0) {
-    evloop.progress();
+fn void EvLoop.loop_progress(&self) {
+  while (self.coroutines.size > 0) {
+    self.progress();
   }
 }
 
-fn void EvLoop.add_coroutine(EvLoop* evloop, Coroutine coroutine, void* args) {
-  Async func = {CoroutineStatus.PENDING, {coroutine, 0, args, evloop}};
-  evloop.coroutines.push(func);
+fn void EvLoop.add_coroutine(&self, Coroutine coroutine, void* args) {
+  Async func = {CoroutineStatus.PENDING, {coroutine, 0, args, self}};
+  self.coroutines.push(func);
 }
 
-fn Async! EvLoop.get_next(EvLoop* evloop) {
-  return evloop.coroutines.pop(); 
+fn Async! EvLoop.get_next(&self) {
+  return self.coroutines.pop(); 
 }
 
